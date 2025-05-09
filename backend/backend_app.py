@@ -12,12 +12,26 @@ POSTS = [
 
 
 def validate_input_post(data):
+    """
+        Validates that a new post contains both 'title' and 'content' fields.
+        Args:
+            data (dict): The post data to validate.
+        Returns:
+            bool: True if both fields are present, otherwise False.
+        """
     if "title" not in data or "content" not in data:
         return False
     return True
 
 
 def find_post_by_id(id_num):
+    """
+        Finds and returns a post by its ID.
+        Args:
+            id_num (int): The ID of the post to find.
+        Returns:
+            dict or None: The post if found, otherwise None.
+        """
     for post in POSTS:
         if post["id"] == id_num:
             return post
@@ -25,6 +39,13 @@ def find_post_by_id(id_num):
 
 
 def delete_post_by_id(id_num):
+    """
+        Deletes a post by its ID.
+        Args:
+            id_num (int): The ID of the post to delete.
+        Returns:
+            list or None: The updated list of posts if deletion was successful, otherwise None.
+        """
     for post in POSTS:
         if post["id"] == id_num:
             POSTS.remove(post)
@@ -34,11 +55,22 @@ def delete_post_by_id(id_num):
 
 @app.errorhandler(404)
 def not_found(error):
+    """
+        Custom handler for 404 Not Found errors.
+        Returns:
+            JSON response with error message and 404 status code.
+        """
     return jsonify({"error": "please check url"}), 404
 
 
 @app.route('/api/posts', methods=['GET', 'POST'])
 def handle_posts():
+    """
+        GET: Returns a list of all posts.
+        POST: Adds a new post with a unique ID.
+        Returns:
+            JSON response with list of posts or the newly created post.
+        """
     if request.method == 'GET':
         return jsonify(POSTS)
     if request.method == 'POST':
@@ -59,6 +91,13 @@ def handle_posts():
 
 @app.route("/api/posts/<int:post_id>", methods=["DELETE"])
 def delete_post(post_id):
+    """
+        Deletes a post by its ID.
+        Args:
+            post_id (int): The ID of the post to delete.
+        Returns:
+            JSON response with success or error message.
+        """
     if request.method == "DELETE":
         post = find_post_by_id(post_id)
 
@@ -71,6 +110,13 @@ def delete_post(post_id):
 
 @app.route("/api/posts/<int:post_id>", methods=["PUT"])
 def update_post(post_id):
+    """
+        Updates the title and/or content of a post by its ID.
+        Args:
+            post_id (int): The ID of the post to update.
+        Returns:
+            JSON response with updated list of posts or error message.
+        """
     if request.method == "PUT":
         post = find_post_by_id(post_id)
 
@@ -93,6 +139,13 @@ def update_post(post_id):
 
 @app.route("/api/posts/search", methods=["GET"])
 def search_post():
+    """
+        Searches posts by title or content using a query parameter.
+        Query Parameters:
+            query (str): Search term.
+        Returns:
+            JSON response with matching posts.
+        """
     search_term = request.args.get("query", "")
     results = []
     for post in POSTS:
@@ -105,10 +158,19 @@ def search_post():
 
 @app.route("/api/posts/order", methods=["GET"])
 def sort_posts():
+    """
+        Sorts posts by a given field and order direction.
+        Query Parameters:
+            sort (str): Field to sort by ('title' or 'content').
+            direction (str): Sort direction ('asc' or 'desc').
+        Returns:
+            JSON response with sorted posts or error message.
+        """
     sort_by = request.args.get("sort","title")
     direction = request.args.get("direction", "asc")
 
-    if sort_by not in ["title", "content"]:
+
+    if sort_by not in ["id", "title", "content"]:
         return jsonify({"error": "Invalid sort field"}), 400
 
     if direction not in ["asc", "desc"]:
@@ -117,15 +179,17 @@ def sort_posts():
     reverse = direction == "desc"
 
     def get_sort_value(post):
-        return post[sort_by].lower()
+        value = post[sort_by]
+        if isinstance(value, str):
+            return value.lower().strip()
+        return value
 
     sorted_posts = sorted(POSTS, key=get_sort_value, reverse=reverse)
-    print(sorted_posts)
+
     return jsonify(sorted_posts)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
-
 
 
 
