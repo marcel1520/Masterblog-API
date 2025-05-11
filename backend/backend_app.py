@@ -62,7 +62,7 @@ def not_found(error):
         """
     return jsonify({"error": "please check url"}), 404
 
-
+@app.route('/')
 @app.route('/api/posts', methods=['GET', 'POST'])
 def handle_posts():
     """
