@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
+
 
 POSTS = [
     {"id": 1, "title": "Banana", "content": "Yellow fruit."},
@@ -62,7 +64,9 @@ def not_found(error):
         """
     return jsonify({"error": "please check url"}), 404
 
+
 @app.route('/')
+
 @app.route('/api/posts', methods=['GET', 'POST'])
 def handle_posts():
     """
@@ -76,12 +80,12 @@ def handle_posts():
     if request.method == 'POST':
         new_post = request.get_json()
         if not validate_input_post(new_post):
-            return jsonify({"error": "invalid or missing post data"}), 404
+            return jsonify({"error": "invalid or missing post data"}), 400
         max_id = 0
+        new_id = max_id + 1
         for post in POSTS:
             if post["id"] > max_id:
                 max_id = post["id"]
-                new_id = max_id + 1
                 new_post["id"] = new_id
         POSTS.append(new_post)
         return jsonify(new_post), 201
@@ -98,14 +102,13 @@ def delete_post(post_id):
         Returns:
             JSON response with success or error message.
         """
-    if request.method == "DELETE":
-        post = find_post_by_id(post_id)
+    post = find_post_by_id(post_id)
 
-        if post is None:
-            return jsonify({"message": f"Post with id:{post_id} not found."}), 404
+    if post is None:
+        return jsonify({"message": f"Post with id:{post_id} not found."}), 404
 
-        delete_post_by_id(post_id)
-        return jsonify({"message": f"Post {post_id} deleted successfully."})
+    delete_post_by_id(post_id)
+    return jsonify({"message": f"Post {post_id} deleted successfully."})
 
 
 @app.route("/api/posts/<int:post_id>", methods=["PUT"])
@@ -117,24 +120,22 @@ def update_post(post_id):
         Returns:
             JSON response with updated list of posts or error message.
         """
-    if request.method == "PUT":
-        post = find_post_by_id(post_id)
+    post = find_post_by_id(post_id)
 
-        if post is None:
-            return jsonify({"message": f"Post with id_{post_id} not found."}), 404
+    if post is None:
+        return jsonify({"message": f"Post with id:{post_id} not found."}), 404
 
-        new_post = request.get_json()
+    new_post = request.get_json()
 
-        title = new_post.get("title")
-        content = new_post.get("content")
-        if title is not None:
-            post["title"] = title
+    title = new_post.get("title")
+    content = new_post.get("content")
+    if title is not None:
+        post["title"] = title
 
+    if content is not None:
+        post["content"] = content
 
-        if content is not None:
-            post["content"] = content
-
-        return jsonify(POSTS)
+    return jsonify(POSTS)
 
 
 @app.route("/api/posts/search", methods=["GET"])
@@ -166,9 +167,8 @@ def sort_posts():
         Returns:
             JSON response with sorted posts or error message.
         """
-    sort_by = request.args.get("sort","title")
+    sort_by = request.args.get("sort", "title")
     direction = request.args.get("direction", "asc")
-
 
     if sort_by not in ["id", "title", "content"]:
         return jsonify({"error": "Invalid sort field"}), 400
@@ -187,6 +187,7 @@ def sort_posts():
     sorted_posts = sorted(POSTS, key=get_sort_value, reverse=reverse)
 
     return jsonify(sorted_posts)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
